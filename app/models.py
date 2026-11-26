@@ -44,6 +44,10 @@ class UserPublic(UserBase):  # SALE: vista pública
 class UserMe(UserPublic):  # SALE: vista privada, solo para el propio usuario
     role: Role
 
+class UserProfile(UserPublic):
+    followers_count: int
+    following_count: int
+
 
 class Token(SQLModel):
     access_token: str

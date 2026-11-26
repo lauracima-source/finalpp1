@@ -1,18 +1,34 @@
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
-from sqlmodel import col, select
-from models import Like, Post
+from sqlmodel import col, select, Session
 
-from dependencies import SessionDep, get_user_or_404
-from models import PostPublic, UserPublic
+from models import Like, Post, PostPublic, UserProfile, UserPublic, User,Follow
+
+from dependencies import CurrentUser, SessionDep, get_user_or_404
+
+
+from sqlalchemy import func  # Importa `func` de sqlalchemy para contar filas
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+def to_profile(db: Session, user: User) -> UserProfile:
+    # Dos conteos en direcciones OPUESTAS sobre la misma tabla:
+    followers = db.exec(
+        select(func.count()).select_from(Follow).where(Follow.followed_id == user.id)
+    ).one()  # filas donde user es el SEGUIDO
+    following = db.exec(
+        select(func.count()).select_from(Follow).where(Follow.follower_id == user.id)
+    ).one()  # filas donde user es el SEGUIDOR
+    return UserProfile.model_validate(
+        user, update={"followers_count": followers, "following_count": following}
+    )
 
-@router.get("/{user_id}", response_model=UserPublic)
+
+@router.get("/{user_id}", response_model=UserProfile)
 def read_user(user_id: int, db: SessionDep):
-    return get_user_or_404(db, user_id)
+    user = get_user_or_404(db, user_id)
+    return to_profile(db, user)
 
 
 @router.get("/{user_id}/posts", response_model=list[PostPublic])
