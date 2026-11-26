@@ -31,6 +31,11 @@ Se verificaron los contadores, dar y quitar likes de forma
 idempotente, los listados, los permisos y la eliminación de
 likes asociados al borrar una publicación.
 
-El test del TODO 8 se tomó de la solución docente y se corrigió
-la comprobación de la respuesta del like agregando assert.
-No se registró una ejecución inicial antes de implementar los TODO.
+Inicialmente copié el test del TODO 8 de la solución docente
+sin modificarlo. En una revisión posterior agregué el assert
+que faltaba para comprobar que la respuesta al dar like fuera 200.
+Volví a ejecutar las pruebas: 12 aprobadas en 11,43 segundos,
+sin advertencias en esa ejecución.
+
+No registré una ejecución inicial antes de implementar los TODO.
+
