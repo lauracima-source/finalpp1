@@ -77,3 +77,27 @@ class PostPublic(PostBase):
     id: int
     author_id: int
     created_at: datetime
+
+
+class PostWithLikes(PostPublic):  # SALE: el post + cuántos likes tiene (se calcula, no se guarda)
+    likes_count: int
+
+
+class Like(SQLModel, table=True):
+   __tablename__ = "likes"
+
+   user_id: int = Field(foreign_key="users.id", 
+                        primary_key=True, 
+                        ondelete="CASCADE"
+                        )
+   
+   post_id: int = Field(foreign_key="posts.id", 
+                        primary_key=True, 
+                        ondelete="CASCADE"
+                        )
+   
+   created_at: datetime = Field(default_factory=utcnow)
+
+
+
+   
