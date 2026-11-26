@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from pydantic import StringConstraints
+from sqlalchemy import CheckConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -97,6 +98,29 @@ class Like(SQLModel, table=True):
                         )
    
    created_at: datetime = Field(default_factory=utcnow)
+
+
+class Follow(SQLModel, table=True):
+    __tablename__ = "follows"
+
+    __table_args__ = (
+        CheckConstraint(
+            "follower_id != followed_id",
+            name="no_self_follow"
+        ),
+    )
+
+    follower_id: int = Field(
+        foreign_key="users.id",
+        primary_key=True,
+        ondelete="CASCADE"
+    )
+    followed_id: int = Field(
+        foreign_key="users.id",
+        primary_key=True,
+        ondelete="CASCADE"
+    )
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 
