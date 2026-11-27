@@ -38,15 +38,10 @@ def read_user_posts(user_id: int, db: SessionDep):
 
 @router.get("/{user_id}/likes", response_model=list[PostPublic])
 def read_user_likes(
-    user_id: int, db: SessionDep, offset: int = 0, limit: Annotated[int, Query(le=100)] = 20
+    user_id: int, db: SessionDep, offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 20
 ):
-    """Los posts a los que este usuario le dio like (el más reciente primero)."""
-    # TODO 6 (DESAFÍO, sin pistas de código): es el espejo del TODO 5.
-    #   Allá: de un post → sus usuarios.   Acá: de un usuario → sus posts.
-    #   Necesitas select(Post), un join con Like, y filtrar por Like.user_id.
-    #   Recuerda: 404 si el usuario no existe, y orden/paginación como en los otros listados.
-    #   (Agrega a los imports de arriba lo que necesites: Like, Post.)
-    #raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "TODO 6: posts que le gustaron")
+    """Publicaciones a las que el usuario dio like."""
     get_user_or_404(db, user_id)
     stmt = (
         select(Post)
@@ -57,4 +52,68 @@ def read_user_likes(
         .limit(limit)
     )
     return db.exec(stmt).all()
+
+
+@router.put("/{user_id}/follow", response_model=UserProfile)
+def follow_user(user_id: int, db: SessionDep, current_user: CurrentUser):
+    target = get_user_or_404(db, user_id)
+
+    if target.id == current_user.id:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "No puedes seguirte a ti mismo"
+        )
+
+    if db.get(Follow, (current_user.id, user_id)) is None:
+        db.add(Follow(follower_id=current_user.id, followed_id=user_id))
+        db.commit()
+
+    return to_profile(db, target)
+
+
+@router.delete("/{user_id}/follow", response_model=UserProfile)
+def unfollow_user(user_id: int, db: SessionDep, current_user: CurrentUser):
+    target = get_user_or_404(db, user_id)
+    follow = db.get(Follow, (current_user.id, user_id))
+
+    if follow is not None:
+        db.delete(follow)
+        db.commit()
+
+    return to_profile(db, target)
+
+
+@router.get("/{user_id}/followers", response_model=list[UserPublic])
+def read_followers(
+    user_id: int, db: SessionDep, offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 20
+):
+    get_user_or_404(db, user_id)
+    stmt = (
+        select(User)
+        .join(Follow, col(Follow.follower_id) == col(User.id))
+        .where(Follow.followed_id == user_id)
+        .order_by(col(Follow.created_at).desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    return db.exec(stmt).all()
+
+
+@router.get("/{user_id}/following", response_model=list[UserPublic])
+def read_following(
+    user_id: int, db: SessionDep, offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 20
+):
+    get_user_or_404(db, user_id)
+    stmt = (
+        select(User)
+        .join(Follow, col(Follow.followed_id) == col(User.id))
+        .where(Follow.follower_id == user_id)
+        .order_by(col(Follow.created_at).desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    return db.exec(stmt).all()
+
 
