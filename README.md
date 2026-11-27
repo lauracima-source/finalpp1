@@ -39,3 +39,23 @@ sin advertencias en esa ejecución.
 
 No registré una ejecución inicial antes de implementar los TODO.
 
+## Clase 4 — TODO 8 y 9: pruebas de seguimiento y feed
+
+Incorporé las pruebas en app/tests/test_follow.py, conservando
+las pruebas de las clases anteriores.
+
+El archivo copiado ya incluía resuelto el test del TODO 9.
+Verifica que las listas de seguidores y seguidos no estén invertidas.
+
+Comando ejecutado:
+uv run pytest -c app/pytest.ini app/tests -q
+
+Resultado: 22 pruebas aprobadas en 24,07 segundos, sin advertencias
+en esa ejecución.
+
+También se verificaron los contadores, la idempotencia del seguimiento,
+el rechazo del auto seguimiento, el contenido del feed y que la cantidad
+de consultas SQL no aumente al seguir a más usuarios.
+
+No registré una ejecución inicial con fallos antes de implementar
+las funcionalidades.
